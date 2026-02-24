@@ -1,6 +1,6 @@
 # Kanban ToDo Dashboard
 
-A Kanban-style task board built with **Next.js**, **Redux**, **React Query**, and **Material UI**. Tasks can be created, updated, deleted, and moved between columns via drag-and-drop. Data is cached with React Query and the UI is powered by a local mock API (json-server).
+A Kanban-style task board built with **Next.js**, **Redux**, **React Query**, and **Material UI**. Tasks can be created, updated, deleted, and moved between columns via drag-and-drop. Data is cached with React Query. The API runs as Next.js API routes (Vercel-ready) or via json-server when `NEXT_PUBLIC_API_URL` is set.
 
 ## Features
 
@@ -37,19 +37,20 @@ A Kanban-style task board built with **Next.js**, **Redux**, **React Query**, an
 npm install
 ```
 
-### Run the app (API + Next.js together)
+### Run the app
 
-One command starts both the mock API and the Next.js app:
+**Option A – Next.js only (uses built-in API):**
 
 ```bash
-npm run dev
+npm run dev:app
 ```
 
-This runs **json-server** on `http://localhost:3001` and **Next.js** on [http://localhost:3000](http://localhost:3000). Open the app URL to see the Kanban board with sample tasks.
+The app uses **Next.js API routes** at `/api/tasks` (no json-server). Open [http://localhost:3000](http://localhost:3000).
 
-**Optional – run separately:**  
-- API only: `npm run api`  
-- App only (if API is already running): `npm run dev:app`
+**Option B – Next.js + json-server (two terminals or one):**
+
+- One command: `npm run dev` (starts json-server on 3001 and Next.js on 3000).
+- To use json-server, create `.env.local` with: `NEXT_PUBLIC_API_URL=http://localhost:3001`
 
 ### Build for production
 
@@ -58,7 +59,7 @@ npm run build
 npm start
 ```
 
-Keep `npm run api` running (or point `NEXT_PUBLIC_API_URL` to a deployed API) when using the production build.
+With no `NEXT_PUBLIC_API_URL`, the app uses the built-in `/api/tasks` (same host).
 
 ## Project structure
 
@@ -76,8 +77,10 @@ Keep `npm run api` running (or point `NEXT_PUBLIC_API_URL` to a deployed API) wh
 │   └── SearchBar.tsx    # Search input (Redux)
 ├── hooks/
 │   └── useTasks.ts      # React Query hooks: useTasksQuery, useCreateTaskMutation, etc.
+├── app/api/tasks/       # Next.js API routes (used on Vercel)
 ├── lib/
-│   └── api.ts           # Fetch wrappers for tasks CRUD (json-server)
+│   ├── api.ts           # Fetch wrappers (uses /api/tasks or external URL)
+│   └── tasks-store.ts   # In-memory store for API routes
 ├── store/
 │   ├── index.ts         # Redux store
 │   └── searchSlice.ts   # Search query state
@@ -89,20 +92,30 @@ Keep `npm run api` running (or point `NEXT_PUBLIC_API_URL` to a deployed API) wh
 └── package.json
 ```
 
-## API (json-server)
+## API
 
-- `GET /tasks` — list all tasks
-- `GET /tasks/:id` — get one task
-- `POST /tasks` — create task (body: `{ title, description, column, priority? }`)
-- `PATCH /tasks/:id` — update task (partial body)
-- `DELETE /tasks/:id` — delete task
+When using the built-in API (default on Vercel and when `NEXT_PUBLIC_API_URL` is not set), routes are under `/api/tasks`:
 
-`column` must be one of: `backlog`, `in_progress`, `review`, `done`.
+- `GET /api/tasks` — list all tasks
+- `GET /api/tasks/:id` — get one task
+- `POST /api/tasks` — create task (body: `{ title, description, column, priority? }`)
+- `PATCH /api/tasks/:id` — update task (partial body)
+- `DELETE /api/tasks/:id` — delete task
 
-## Deployment
+`column` must be one of: `backlog`, `in_progress`, `review`, `done`.  
+With `NEXT_PUBLIC_API_URL` set (e.g. to json-server), the same paths are used relative to that URL (`/tasks`, `/tasks/:id`).
 
-- **Next.js**: Deploy to Vercel, Netlify, or any Node host. Set `NEXT_PUBLIC_API_URL` to your tasks API URL if not same-origin.
-- **API**: For a live API, deploy `db.json` + json-server (e.g. to Railway, Render, or use a real backend). For local-only, run `npm run api` and use the app locally.
+## Deployment (Vercel)
+
+1. Push your code to GitHub and import the repo in [Vercel](https://vercel.com).
+2. **Do not** set `NEXT_PUBLIC_API_URL` — the app will use the built-in API routes (`/api/tasks`) on the same deployment.
+3. Deploy. The API is served by the same Vercel project (serverless functions).
+
+**How the API is managed on Vercel:**
+
+- Tasks are handled by **Next.js API routes** in `app/api/tasks/` and `app/api/tasks/[id]/`.
+- Data is stored **in-memory** in the serverless function (resets on cold start). For persistent storage, add [Vercel KV](https://vercel.com/docs/storage/vercel-kv) or a database and update `lib/tasks-store.ts`.
+- To use an external API (e.g. your own backend) instead, set the env var `NEXT_PUBLIC_API_URL` to that API’s base URL in the Vercel project settings.
 
 ## License
 

@@ -1,13 +1,14 @@
-const API_BASE = typeof window !== 'undefined' ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') : 'http://localhost:3001';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+const TASKS_BASE = API_BASE ? `${API_BASE}/tasks` : '/api/tasks';
 
 export async function fetchTasks(): Promise<import('@/types/task').Task[]> {
-  const res = await fetch(`${API_BASE}/tasks`);
+  const res = await fetch(TASKS_BASE);
   if (!res.ok) throw new Error('Failed to fetch tasks');
   return res.json();
 }
 
 export async function fetchTask(id: string): Promise<import('@/types/task').Task> {
-  const res = await fetch(`${API_BASE}/tasks/${id}`);
+  const res = await fetch(`${TASKS_BASE}/${id}`);
   if (!res.ok) throw new Error('Failed to fetch task');
   return res.json();
 }
@@ -15,7 +16,7 @@ export async function fetchTask(id: string): Promise<import('@/types/task').Task
 export async function createTask(
   body: import('@/types/task').CreateTaskInput
 ): Promise<import('@/types/task').Task> {
-  const res = await fetch(`${API_BASE}/tasks`, {
+  const res = await fetch(TASKS_BASE, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -28,7 +29,7 @@ export async function updateTask(
   id: string,
   body: Partial<import('@/types/task').CreateTaskInput>
 ): Promise<import('@/types/task').Task> {
-  const res = await fetch(`${API_BASE}/tasks/${id}`, {
+  const res = await fetch(`${TASKS_BASE}/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -38,6 +39,6 @@ export async function updateTask(
 }
 
 export async function deleteTask(id: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/tasks/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${TASKS_BASE}/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error('Failed to delete task');
 }
