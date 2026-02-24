@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as api from '@/lib/api';
-import type { Task, CreateTaskInput, TaskColumn } from '@/types/task';
+import type { Task, CreateTaskInput, TaskColumn, TaskPriority } from '@/types/task';
 
 const QUERY_KEY = ['tasks'] as const;
 
@@ -31,7 +31,7 @@ export function useCreateTaskMutation() {
 export function useUpdateTaskMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...body }: { id: string; column?: TaskColumn; title?: string; description?: string }) =>
+    mutationFn: ({ id, ...body }: { id: string; column?: TaskColumn; title?: string; description?: string; priority?: TaskPriority }) =>
       api.updateTask(id, body),
     onSuccess: (updated) => {
       queryClient.setQueryData(QUERY_KEY, (old: Task[] | undefined) =>
